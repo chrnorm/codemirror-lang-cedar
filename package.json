@@ -1,6 +1,6 @@
 {
   "name": "codemirror-lang-cedar",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Cedar language support for CodeMirror",
   "scripts": {
     "test": "mocha test/test.js",
@@ -16,6 +16,7 @@
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/language": "^6.0.0",
     "@lezer/highlight": "^1.0.0",
     "@lezer/lr": "^1.0.0"

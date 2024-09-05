@@ -7,7 +7,14 @@ import {
   foldInside,
   delimitedIndent,
 } from "@codemirror/language";
+import { completeFromList, ifNotIn } from "@codemirror/autocomplete";
 import { styleTags, tags as t } from "@lezer/highlight";
+
+let kwCompletion = (name: string) => ({ label: name, type: "keyword" });
+
+const keywords = "permit forbid when unless".split(" ").map(kwCompletion);
+
+const dontComplete = ["String", "LineComment"];
 
 export const cedarLanguage = LRLanguage.define({
   parser: parser.configure({
@@ -31,10 +38,14 @@ export const cedarLanguage = LRLanguage.define({
     ],
   }),
   languageData: {
-    commentTokens: { line: ";" },
+    commentTokens: { line: "//" },
   },
 });
 
 export function cedar() {
-  return new LanguageSupport(cedarLanguage);
+  return new LanguageSupport(cedarLanguage, [
+    cedarLanguage.data.of({
+      autocomplete: ifNotIn(dontComplete, completeFromList(keywords)),
+    }),
+  ]);
 }

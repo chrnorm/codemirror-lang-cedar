@@ -24,6 +24,7 @@ export const cedarLanguage = LRLanguage.define({
         String: t.string,
         LineComment: t.lineComment,
         "( )": t.paren,
+        "{ }": t.paren,
       }),
     ],
   }),

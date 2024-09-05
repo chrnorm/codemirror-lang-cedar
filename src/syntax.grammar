@@ -16,13 +16,13 @@
   composite_literal @right,
   expression,
   literal @left,
-  string @left
+  String @left
 }
 
 @tokens {
-  identifier { $[a-zA-Z_] $[a-zA-Z0-9_]* }
-  string { '"' (!["\\] | "\\" _)* '"' }
-  int { $[0-9]+ }
+  Identifier { $[a-zA-Z_] $[a-zA-Z0-9_]* }
+  String { '"' (!["\\] | "\\" _)* '"' }
+  Int { $[0-9]+ }
 
   whitespace { $[ \t\n\r]+ }
   LineComment { "//" ![\n]* }
@@ -33,16 +33,16 @@
 @skip { whitespace | LineComment }
 
 policy {
-  annotation* effect "(" scope ")" condition* ";"
+  Policy { annotation* effect "(" Scope { scope } ")" condition* ";" }
 }
 
-effect { @specialize<identifier, "permit" | "forbid"> }
+effect { @specialize<Identifier, "permit" | "forbid"> }
 
 scope {
-  principal_constraint "," action_constraint "," resource_constraint
+  PrincipalConstraint { principal_constraint } "," ActionConstraint { action_constraint } "," ResourceConstraint { resource_constraint }
 }
 
-annotation { "@" identifier "(" string ")" }
+annotation { "@" Identifier "(" String ")" }
 
 principal_constraint {
   "principal" (principal_is | principal_eq | principal_in | principal_eq_template | principal_in_template)?
@@ -93,18 +93,18 @@ expression {
   entlist |
   set_literal |
   record_literal |
-  principal |
-  action |
-  resource |
-  context
+  Principal |
+  Action |
+  Resource |
+  Context
 }
 
-boolean { true | false }
+Boolean { true | false }
 
-true { @specialize<identifier, "true"> }
-false { @specialize<identifier, "false"> }
+true { @specialize<Identifier, "true"> }
+false { @specialize<Identifier, "false"> }
 
-literal { boolean | int | string }
+literal { Boolean | Int | String }
 
 unary_expression { ("-" | "!") !expression }
 
@@ -118,21 +118,21 @@ binary_expression {
 
 index_expression { expression "[" expression "]" }
 parenthesized_expression { "(" expression ")" }
-selector_expression { expression "." identifier }
-has_expression { expression "has" (string | identifier) }
+selector_expression { expression "." Identifier }
+has_expression { expression "has" (String | Identifier) }
 is_expression { expression "is" path }
 call_expression { expression "(" commaSep<expression> ")" }
-like_expression { expression "like" string }
+like_expression { expression "like" String }
 if_then_else { if !expression then !expression else !expression }
 contains_expression { expression "." contains "(" expression ")" }
 contains_all_expression { expression "." containsAll "(" expression ")" }
 ext_fun_call { path "(" commaSep<expression> ")" }
 
-namespace { identifier "::" }
+Namespace { Identifier "::" }
 
-path { namespace+ identifier }
+path { Namespace+ Identifier }
 
-entity { namespace+ string }
+entity { Namespace+ String }
 
 entlist { "[" commaSep<entity> "]" }
 
@@ -140,16 +140,16 @@ set_literal { "[" commaSep<literal> "]" }
 
 record_literal { "{" commaSep<record_attribute> "}" }
 
-record_attribute { (string | identifier) ":" literal }
+record_attribute { (String | Identifier) ":" literal }
 
 commaSep<rule> { rule ("," rule)* }
 
-principal { @specialize<identifier, "principal"> }
-action { @specialize<identifier, "action"> }
-resource { @specialize<identifier, "resource"> }
-context { @specialize<identifier, "context"> }
-if { @specialize<identifier, "if"> }
-then { @specialize<identifier, "then"> }
-else { @specialize<identifier, "else"> }
-contains { @specialize<identifier, "contains"> }
-containsAll { @specialize<identifier, "containsAll"> }
+Principal { @specialize<Identifier, "principal"> }
+Action { @specialize<Identifier, "action"> }
+Resource { @specialize<Identifier, "resource"> }
+Context { @specialize<Identifier, "context"> }
+if { @specialize<Identifier, "if"> }
+then { @specialize<Identifier, "then"> }
+else { @specialize<Identifier, "else"> }
+contains { @specialize<Identifier, "contains"> }
+containsAll { @specialize<Identifier, "containsAll"> }

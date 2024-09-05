@@ -1,41 +1,15 @@
-# Booleans
+# Allow all policy
 
-#t
-#f
-
-==>
-
-Program(Boolean, Boolean)
-
-# Identifiers
-
-one
-Two_Three
+permit(principal, action, resource);
 
 ==>
 
-Program(Identifier, Identifier)
+Program(Policy("(",Scope(PrincipalConstraint,",",ActionConstraint,",",ResourceConstraint),")",";"))
 
-# Strings
+# When clause
 
-"hello"
-"one\"\\two"
-
-==>
-
-Program(String, String)
-
-# Applications
-
-(begin
-  (when #t
-    (print (concat "hello" " " "world")))
-  (print "DONE"))
+permit(principal, action, resource) when { principal.is_admin == true };
 
 ==>
 
-Program(Application(
-  Identifier,
-  Application(Identifier, Boolean, Application(
-    Identifier, Application(Identifier, String, String, String)))
-  Application(Identifier, String)))
+Program(Policy("(",Scope(PrincipalConstraint,",",ActionConstraint,",",ResourceConstraint),")","{",Principal,".",Identifier,"==",Boolean,"}",";"))

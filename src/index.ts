@@ -19,6 +19,8 @@ export const cedarLanguage = LRLanguage.define({
         Application: foldInside,
       }),
       styleTags({
+        effect: t.keyword,
+        "when unless": t.keyword,
         Identifier: t.variableName,
         Boolean: t.bool,
         String: t.string,

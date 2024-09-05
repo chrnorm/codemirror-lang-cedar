@@ -1,26 +1,155 @@
-@top Program { expression* }
+@top Program { policy* }
 
-@skip { space | LineComment }
-
-expression {
-  Identifier |
-  String |
-  Boolean |
-  Application { "(" expression* ")" }
+@precedence {
+  entity @left,
+  path @left,
+  primary @left,
+  unary @right,
+  multiplicative @left,
+  additive @left,
+  comparative @left,
+  and @left,
+  or @left,
+  unary_expression @left,
+  call_expression @left,
+  if_then_else @left,
+  composite_literal @right,
+  expression,
+  literal @left,
+  string @left
 }
 
 @tokens {
-  Identifier { $[a-zA-Z_\-0-9]+ }
+  identifier { $[a-zA-Z_] $[a-zA-Z0-9_]* }
+  string { '"' (!["\\] | "\\" _)* '"' }
+  int { $[0-9]+ }
 
-  String { '"' (!["\\] | "\\" _)* '"' }
+  whitespace { $[ \t\n\r]+ }
+  LineComment { "//" ![\n]* }
 
-  Boolean { "#t" | "#f" }
-
-  LineComment { ";" ![\n]* }
-
-  space { $[ \t\n\r]+ }
-
-  "(" ")"
+  "(" ")" "{" "}" "[" "]" "," ";" "::" ":" "." "=="
 }
 
-@detectDelim
+@skip { whitespace | LineComment }
+
+policy {
+  annotation* effect "(" scope ")" condition* ";"
+}
+
+effect { @specialize<identifier, "permit" | "forbid"> }
+
+scope {
+  principal_constraint "," action_constraint "," resource_constraint
+}
+
+annotation { "@" identifier "(" string ")" }
+
+principal_constraint {
+  "principal" (principal_is | principal_eq | principal_in | principal_eq_template | principal_in_template)?
+}
+
+principal_is { "is" path }
+principal_eq { "==" entity }
+principal_in { "in" entity }
+principal_eq_template { "==" "?principal" }
+principal_in_template { "in" "?principal" }
+
+action_constraint {
+  "action" (action_eq | action_in | action_in_list)?
+}
+
+action_eq { "==" entity }
+action_in { "in" entity }
+action_in_list { "in" entlist }
+
+resource_constraint {
+  "resource" (resource_is | resource_eq | resource_in | resource_eq_template | resource_in_template)?
+}
+
+resource_is { "is" path }
+resource_eq { "==" entity }
+resource_in { "in" entity }
+resource_eq_template { "==" "?resource" }
+resource_in_template { "in" "?resource" }
+
+condition { ("when" | "unless") "{" expression "}" }
+
+expression {
+  literal |
+  unary_expression |
+  binary_expression |
+  index_expression |
+  parenthesized_expression |
+  selector_expression |
+  has_expression |
+  is_expression |
+  call_expression |
+  like_expression |
+  if_then_else |
+  contains_expression |
+  contains_all_expression |
+  ext_fun_call |
+  entity |
+  entlist |
+  set_literal |
+  record_literal |
+  principal |
+  action |
+  resource |
+  context
+}
+
+boolean { true | false }
+
+true { @specialize<identifier, "true"> }
+false { @specialize<identifier, "false"> }
+
+literal { boolean | int | string }
+
+unary_expression { ("-" | "!") !expression }
+
+binary_expression {
+  expression !multiplicative "*" expression |
+  expression !additive ("+" | "-") expression |
+  expression !comparative ("<" | "<=" | ">=" | ">" | "!=" | "==" | "in") expression |
+  expression !and "&&" expression |
+  expression !or "||" expression
+}
+
+index_expression { expression "[" expression "]" }
+parenthesized_expression { "(" expression ")" }
+selector_expression { expression "." identifier }
+has_expression { expression "has" (string | identifier) }
+is_expression { expression "is" path }
+call_expression { expression "(" commaSep<expression> ")" }
+like_expression { expression "like" string }
+if_then_else { if !expression then !expression else !expression }
+contains_expression { expression "." contains "(" expression ")" }
+contains_all_expression { expression "." containsAll "(" expression ")" }
+ext_fun_call { path "(" commaSep<expression> ")" }
+
+namespace { identifier "::" }
+
+path { namespace+ identifier }
+
+entity { namespace+ string }
+
+entlist { "[" commaSep<entity> "]" }
+
+set_literal { "[" commaSep<literal> "]" }
+
+record_literal { "{" commaSep<record_attribute> "}" }
+
+record_attribute { (string | identifier) ":" literal }
+
+commaSep<rule> { rule ("," rule)* }
+
+principal { @specialize<identifier, "principal"> }
+action { @specialize<identifier, "action"> }
+resource { @specialize<identifier, "resource"> }
+context { @specialize<identifier, "context"> }
+if { @specialize<identifier, "if"> }
+then { @specialize<identifier, "then"> }
+else { @specialize<identifier, "else"> }
+contains { @specialize<identifier, "contains"> }
+containsAll { @specialize<identifier, "containsAll"> }

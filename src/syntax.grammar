@@ -39,7 +39,7 @@
 @skip { whitespace | LineComment }
 
 policy {
-  Policy { annotation* effect "(" Scope { scope } ")" Condition* ";" }
+  Policy { annotation* effect Scope { "("  scope ")" } Condition* ";" }
 }
 
 effect { kw<"permit"> | kw<"forbid"> }
@@ -48,10 +48,12 @@ scope {
   PrincipalConstraint { principal_constraint } "," ActionConstraint { action_constraint } "," ResourceConstraint { resource_constraint }
 }
 
-annotation { "@" identifier "(" String ")" }
+At { "@" }
+
+annotation { At AnnotationKey { identifier } "(" String ")" }
 
 principal_constraint {
-  "principal" (principal_is | principal_eq | principal_in | principal_eq_template | principal_in_template)?
+  Principal (principal_is | principal_eq | principal_in | principal_eq_template | principal_in_template)?
 }
 
 principal_is { kw<"is"> path }
@@ -61,7 +63,7 @@ principal_eq_template { CompareOp<"=="> "?principal" }
 principal_in_template { kw<"in"> "?principal" }
 
 action_constraint {
-  "action" (action_eq | action_in | action_in_list)?
+  Action (action_eq | action_in | action_in_list)?
 }
 
 action_eq { CompareOp<"=="> entity }
@@ -69,7 +71,7 @@ action_in { kw<"in"> entity }
 action_in_list { kw<"in"> entlist }
 
 resource_constraint {
-  "resource" (resource_is | resource_eq | resource_in | resource_eq_template | resource_in_template)?
+  Resource (resource_is | resource_eq | resource_in | resource_eq_template | resource_in_template)?
 }
 
 resource_is { kw<"is"> path }

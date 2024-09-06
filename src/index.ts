@@ -8,7 +8,7 @@ import {
   delimitedIndent,
   continuedIndent,
 } from "@codemirror/language";
-import { completeFromList, ifNotIn } from "@codemirror/autocomplete";
+import { completeFromList, ifIn, ifNotIn } from "@codemirror/autocomplete";
 import { styleTags, tags as t } from "@lezer/highlight";
 
 let kwCompletion = (name: string) => ({ label: name, type: "keyword" });
@@ -21,7 +21,7 @@ export const cedarLanguage = LRLanguage.define({
   parser: parser.configure({
     props: [
       indentNodeProp.add({
-        Policy: continuedIndent(),
+        Scope: continuedIndent(),
         Condition: continuedIndent(),
         Application: delimitedIndent({ closing: ")", align: false }),
       }),
@@ -44,6 +44,8 @@ export const cedarLanguage = LRLanguage.define({
         String: t.string,
         Int: t.integer,
         LineComment: t.lineComment,
+        At: t.meta,
+        AnnotationKey: t.meta,
         "( )": t.paren,
         "{ }": t.brace,
         "[ ]": t.squareBracket,
@@ -59,7 +61,25 @@ export const cedarLanguage = LRLanguage.define({
 export function cedar() {
   return new LanguageSupport(cedarLanguage, [
     cedarLanguage.data.of({
-      autocomplete: ifNotIn(dontComplete, completeFromList(keywords)),
+      autocomplete: ifNotIn(
+        ["String", "LineComment", "Scope", "Condition"],
+        completeFromList([
+          { label: "permit", type: "keyword" },
+          { label: "forbid", type: "keyword" },
+        ]),
+      ),
+    }),
+    cedarLanguage.data.of({
+      autocomplete: ifIn(
+        ["Scope"],
+        completeFromList([{ label: "principal", type: "variable" }]),
+      ),
+    }),
+    cedarLanguage.data.of({
+      autocomplete: ifIn(
+        ["ActionConstraint"],
+        completeFromList([{ label: "action", type: "variable" }]),
+      ),
     }),
   ]);
 }

@@ -6,6 +6,7 @@ import {
   foldNodeProp,
   foldInside,
   delimitedIndent,
+  continuedIndent,
 } from "@codemirror/language";
 import { completeFromList, ifNotIn } from "@codemirror/autocomplete";
 import { styleTags, tags as t } from "@lezer/highlight";
@@ -20,6 +21,8 @@ export const cedarLanguage = LRLanguage.define({
   parser: parser.configure({
     props: [
       indentNodeProp.add({
+        Policy: continuedIndent(),
+        Condition: continuedIndent(),
         Application: delimitedIndent({ closing: ")", align: false }),
       }),
       foldNodeProp.add({

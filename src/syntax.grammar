@@ -39,7 +39,7 @@
 @skip { whitespace | LineComment }
 
 policy {
-  Policy { annotation* effect "(" Scope { scope } ")" condition* ";" }
+  Policy { annotation* effect "(" Scope { scope } ")" Condition* ";" }
 }
 
 effect { kw<"permit"> | kw<"forbid"> }
@@ -78,7 +78,7 @@ resource_in { kw<"in"> entity }
 resource_eq_template { CompareOp<"=="> "?resource" }
 resource_in_template { kw<"in"> "?resource" }
 
-condition { (kw<"when"> | kw<"unless">) "{" expression "}" }
+Condition { (kw<"when"> | kw<"unless">) "{" expression "}" }
 
 expression {
   literal |

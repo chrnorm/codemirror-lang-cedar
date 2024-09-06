@@ -20,14 +20,20 @@
 }
 
 @tokens {
-  Identifier { $[a-zA-Z_] $[a-zA-Z0-9_]* }
+  identifierChar { @asciiLetter | $[_$\u{a1}-\u{10ffff}] }
+
+  word { identifierChar (identifierChar | @digit)* }
+
+  identifier { word }
+
+
   String { '"' (!["\\] | "\\" _)* '"' }
   Int { $[0-9]+ }
 
   whitespace { $[ \t\n\r]+ }
-  LineComment { "//" ![\n]* }
+  LineComment[isolate] { "//" ![\n]* }
 
-  "(" ")" "{" "}" "[" "]" "," ";" "::" ":" "." "=="
+  "(" ")" "{" "}" "[" "]" "," ";" "::" "." "=="
 }
 
 @skip { whitespace | LineComment }
@@ -36,43 +42,43 @@ policy {
   Policy { annotation* effect "(" Scope { scope } ")" condition* ";" }
 }
 
-effect { @specialize<Identifier, "permit" | "forbid"> }
+effect { kw<"permit"> | kw<"forbid"> }
 
 scope {
   PrincipalConstraint { principal_constraint } "," ActionConstraint { action_constraint } "," ResourceConstraint { resource_constraint }
 }
 
-annotation { "@" Identifier "(" String ")" }
+annotation { "@" identifier "(" String ")" }
 
 principal_constraint {
   "principal" (principal_is | principal_eq | principal_in | principal_eq_template | principal_in_template)?
 }
 
-principal_is { "is" path }
-principal_eq { "==" entity }
-principal_in { "in" entity }
-principal_eq_template { "==" "?principal" }
-principal_in_template { "in" "?principal" }
+principal_is { kw<"is"> path }
+principal_eq { CompareOp<"=="> entity }
+principal_in { kw<"in"> entity }
+principal_eq_template { CompareOp<"=="> "?principal" }
+principal_in_template { kw<"in"> "?principal" }
 
 action_constraint {
   "action" (action_eq | action_in | action_in_list)?
 }
 
-action_eq { "==" entity }
-action_in { "in" entity }
-action_in_list { "in" entlist }
+action_eq { CompareOp<"=="> entity }
+action_in { kw<"in"> entity }
+action_in_list { kw<"in"> entlist }
 
 resource_constraint {
   "resource" (resource_is | resource_eq | resource_in | resource_eq_template | resource_in_template)?
 }
 
-resource_is { "is" path }
-resource_eq { "==" entity }
-resource_in { "in" entity }
-resource_eq_template { "==" "?resource" }
-resource_in_template { "in" "?resource" }
+resource_is { kw<"is"> path }
+resource_eq { CompareOp<"=="> entity }
+resource_in { kw<"in"> entity }
+resource_eq_template { CompareOp<"=="> "?resource" }
+resource_in_template { kw<"in"> "?resource" }
 
-condition { ("when" | "unless") "{" expression "}" }
+condition { (kw<"when"> | kw<"unless">) "{" expression "}" }
 
 expression {
   literal |
@@ -99,38 +105,39 @@ expression {
   Context
 }
 
-Boolean { true | false }
+boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
-true { @specialize<Identifier, "true"> }
-false { @specialize<Identifier, "false"> }
+literal { boolean | Int | String }
 
-literal { Boolean | Int | String }
+CompareOp<expr> { expr }
+ArithOp<expr> { expr }
+LogicOp<expr> { expr }
 
 unary_expression { ("-" | "!") !expression }
 
 binary_expression {
-  expression !multiplicative "*" expression |
-  expression !additive ("+" | "-") expression |
-  expression !comparative ("<" | "<=" | ">=" | ">" | "!=" | "==" | "in") expression |
-  expression !and "&&" expression |
-  expression !or "||" expression
+  expression !multiplicative ArithOp<"*"> expression |
+  expression !additive (ArithOp<"+" | "-">) expression |
+  expression !comparative (CompareOp<"<" | "<=" | ">=" | ">" | "!=" | "=="> | kw<"in">) expression |
+  expression !and LogicOp<"&&"> expression |
+  expression !or LogicOp<"||"> expression
 }
 
 index_expression { expression "[" expression "]" }
 parenthesized_expression { "(" expression ")" }
-selector_expression { expression "." Identifier }
-has_expression { expression "has" (String | Identifier) }
-is_expression { expression "is" path }
+selector_expression { expression "." identifier }
+has_expression { expression kw<"has"> (String | identifier) }
+is_expression { expression kw<"is"> path }
 call_expression { expression "(" commaSep<expression> ")" }
-like_expression { expression "like" String }
-if_then_else { if !expression then !expression else !expression }
-contains_expression { expression "." contains "(" expression ")" }
-contains_all_expression { expression "." containsAll "(" expression ")" }
+like_expression { expression kw<"like"> String }
+if_then_else { kw<"if"> !expression kw<"then"> !expression kw<"else"> !expression }
+contains_expression { expression "." kw<"contains"> "(" expression ")" }
+contains_all_expression { expression "." kw<"containsAll"> "(" expression ")" }
 ext_fun_call { path "(" commaSep<expression> ")" }
 
-Namespace { Identifier "::" }
+Namespace { identifier "::" }
 
-path { Namespace+ Identifier }
+path { Namespace+ identifier }
 
 entity { Namespace+ String }
 
@@ -140,16 +147,13 @@ set_literal { "[" commaSep<literal> "]" }
 
 record_literal { "{" commaSep<record_attribute> "}" }
 
-record_attribute { (String | Identifier) ":" literal }
+record_attribute { (String | identifier) ":" literal }
 
 commaSep<rule> { rule ("," rule)* }
 
-Principal { @specialize<Identifier, "principal"> }
-Action { @specialize<Identifier, "action"> }
-Resource { @specialize<Identifier, "resource"> }
-Context { @specialize<Identifier, "context"> }
-if { @specialize<Identifier, "if"> }
-then { @specialize<Identifier, "then"> }
-else { @specialize<Identifier, "else"> }
-contains { @specialize<Identifier, "contains"> }
-containsAll { @specialize<Identifier, "containsAll"> }
+Principal { @specialize<identifier, "principal"> }
+Action { @specialize<identifier, "action"> }
+Resource { @specialize<identifier, "resource"> }
+Context { @specialize<identifier, "context"> }
+
+kw<term> { @specialize[@name={term}]<identifier, term> }

@@ -39,7 +39,7 @@
 @skip { whitespace | LineComment }
 
 policy {
-  Policy { annotation* effect Scope { "("  scope ")" } Condition* ";" }
+  Policy { annotation* effect Scope { "("  scope? ")" } Condition* ";" }
 }
 
 effect { kw<"permit"> | kw<"forbid"> }

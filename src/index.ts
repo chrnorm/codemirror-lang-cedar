@@ -11,12 +11,6 @@ import {
 import { completeFromList, ifIn, ifNotIn } from "@codemirror/autocomplete";
 import { styleTags, tags as t } from "@lezer/highlight";
 
-let kwCompletion = (name: string) => ({ label: name, type: "keyword" });
-
-const keywords = "permit forbid when unless".split(" ").map(kwCompletion);
-
-const dontComplete = ["String", "LineComment"];
-
 export const cedarLanguage = LRLanguage.define({
   parser: parser.configure({
     props: [
@@ -72,13 +66,22 @@ export function cedar() {
     cedarLanguage.data.of({
       autocomplete: ifIn(
         ["Scope"],
-        completeFromList([{ label: "principal", type: "variable" }]),
+        completeFromList([
+          { label: "principal", type: "variable" },
+          { label: "action", type: "variable" },
+          { label: "resource", type: "variable" },
+        ]),
       ),
     }),
     cedarLanguage.data.of({
       autocomplete: ifIn(
-        ["ActionConstraint"],
-        completeFromList([{ label: "action", type: "variable" }]),
+        ["Condition"],
+        completeFromList([
+          { label: "principal", type: "variable" },
+          { label: "action", type: "variable" },
+          { label: "resource", type: "variable" },
+          { label: "context", type: "variable" },
+        ]),
       ),
     }),
   ]);
